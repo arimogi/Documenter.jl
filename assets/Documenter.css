@@ -5,3 +5,8 @@ div.wy-menu-vertical ul.current li.toctree-l3 a {
 a.documenter-source {
   float: right;
 }
+
+
+.methodtable li {
+    margin-top: 0px;
+}

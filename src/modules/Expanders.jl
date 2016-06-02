@@ -272,6 +272,37 @@ immutable DocsNodes
     nodes :: Vector{DocsNode}
 end
 
+function methodtable_node(mod::Module, ex)
+    s = """
+    <div class="methodtable">
+        <code>makedocs</code> has the following methods:
+        <ol>
+    """
+
+    obj = mod.eval(ex)
+    name = string(obj)
+    for m=methods(obj)
+        tv, decls, file, line = Base.arg_decl_parts(m)
+        args = join(["$(n)::$(t)" for (n,t)=decls], ", ")
+        s *= """
+        <li>
+            <code><span class="n f">$(name)</span>($(args))</code>
+            defined at
+            <a href="...">$(file):$(line)</a>
+        </li>
+        """
+    end
+
+    s *= """
+    </div>
+
+    <pre><code>
+    $(methods(obj))
+    </code></pre>
+    """
+    Markdown.Paragraph(s)
+end
+
 function Selectors.runner(::Type{DocsBlocks}, x, page, doc)
     failed = false
     nodes  = DocsNode[]
@@ -305,6 +336,7 @@ function Selectors.runner(::Type{DocsBlocks}, x, page, doc)
         anchor   = Anchors.add!(doc.internal.docs, object, slug, page.build)
         docsnode = DocsNode(docstr, anchor, object, page)
         doc.internal.objects[object] = docsnode
+        push!(docstr, methodtable_node(curmod, ex))
         push!(nodes, docsnode)
     end
     # When a `@docs` block fails we need to remove the `.language` since some markdown
